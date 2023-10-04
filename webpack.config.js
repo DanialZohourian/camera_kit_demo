@@ -4,14 +4,14 @@ module.exports = {
   entry: './src/main.js',
   output: {
     filename: 'packed.js',
-    path: path.resolve(__dirname, 'public'),
+    path: path.resolve(__dirname, 'docs'),
   },
   optimization: {
     minimize: false
   },
   devServer: {
     static: {
-      directory: path.join(__dirname, 'public'),
+      directory: path.join(__dirname, 'docs'),
     },
     compress: true,
     port: 9000,
