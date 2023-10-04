@@ -1,160 +1,52 @@
+// Import the necessary Camera Kit modules.
 import {
-    bootstrapCameraKit,
-    CameraKitSession,
-    createMediaStreamSource,
-    Transform2D,
-    Lens,
-  } from '@snap/camera-kit';
-  
-  let mediaStream;
-  
-  function isFirstCharactersBack(str) {
-    // Convert both the first character and "Back" to lowercase for case-insensitive comparison
-    const firstFourChars = str.slice(0, 4).toLowerCase();
-    const comparisonStr = "back".toLowerCase();
-  
-    return firstFourChars === comparisonStr;
-  }
+  bootstrapCameraKit,
+  CameraKitSession,
+  createMediaStreamSource,
+  Transform2D,
+  Lens,
+} from '@snap/camera-kit';
 
-  async function init() {
-    const cameraKit = await bootstrapCameraKit({ apiToken: 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNjg0ODMxMTQ0LCJzdWIiOiJlYTg4ZjQyZC0xYmM5LTRkN2YtYTMwMS02Y2M4YzU2OTg2Y2J-U1RBR0lOR340OGY1YjJmYS1iZGNjLTQ5MzAtYjI2NS1jNGYzODliMzAwYjAifQ.BojCwDCBLoh_7wsjjiM59vkpvdCDUyDd0WVMcFjcei0' });
-    const session = await cameraKit.createSession();
-    document.getElementById('canvas').replaceWith(session.output.live);
-    const { lenses } = await cameraKit.lenses.repository.loadLensGroups([
-      '1ef0167d-093e-4165-8fdd-d1f8326ba52a',
-    ]);
-  
-    session.applyLens(lenses[1]);
+// Create an async function to initialize Camera Kit and start the video stream.
+(async function() {
+  // Bootstrap Camera Kit using your API token.
+  const cameraKit = await bootstrapCameraKit({
+    apiToken: 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNjg0ODMxMTQ0LCJzdWIiOiJlYTg4ZjQyZC0xYmM5LTRkN2YtYTMwMS02Y2M4YzU2OTg2Y2J-U1RBR0lOR340OGY1YjJmYS1iZGNjLTQ5MzAtYjI2NS1jNGYzODliMzAwYjAifQ.BojCwDCBLoh_7wsjjiM59vkpvdCDUyDd0WVMcFjcei0'
+  });
 
-    await setCameraKitSource(session);
-  
-    attachCamerasToSelect(session);
-    attachLensesToSelect(lenses, session);
-  }
-  
-  async function setCameraKitSource(
-    session,
-    deviceId,
-    isBackCamera,
-  ) {
-    if (mediaStream) {
-      session.pause();
-      mediaStream.getVideoTracks()[0].stop();
+  // Create a new CameraKit session.
+  const session = await cameraKit.createSession();
+
+  // Replace the `canvas` element with the live output from the CameraKit session.
+  document.getElementById('canvas').replaceWith(session.output.live);
+
+  // Load the specified lens group.
+  const { lenses } = await cameraKit.lenses.repository.loadLensGroups([
+    '1ef0167d-093e-4165-8fdd-d1f8326ba52a',
+  ]);
+
+  // Apply the first lens in the lens group to the CameraKit session.
+  session.applyLens(lenses[9]);
+
+  // Get the user's media stream.
+  let mediaStream = await navigator.mediaDevices.getUserMedia({
+    video: true,
+  });
+
+  // Create a CameraKit media stream source from the user's media stream.
+  const source = createMediaStreamSource(
+    mediaStream, {
+      transform: Transform2D.MirrorX,
+      cameraType: 'front'
     }
-  
-    mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: { deviceId },
-    });
+  );
 
-    const source = createMediaStreamSource(mediaStream);
-  
-    await session.setSource(source);
+  // Set the source of the CameraKit session.
+  await session.setSource(source);
 
+  // Set the render size of the CameraKit session to the size of the browser window.
+  session.source.setRenderSize( window.innerWidth,  window.innerHeight);
 
-    session.source.setRenderSize( window.innerWidth,  window.innerHeight);
-    if (!isBackCamera) {
-        session.source.setTransform(Transform2D.MirrorX);
-    }
-  
-    session.play();
-  }
-  
-  async function attachCamerasToSelect(session) {
-    const cameraSelect = document.getElementById('cameras');
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const cameras = devices.filter(({ kind }) => kind === 'videoinput');
-  
-    cameras.forEach((camera) => {
-      const option = document.createElement('option');
-  
-      option.value = camera.deviceId;
-      option.text = camera.label;
-  
-      cameraSelect.appendChild(option);
-    });
-  
-    cameraSelect.addEventListener('change', (event) => {
-      const deviceId = (event.target).selectedOptions[0]
-        .value;
-      setCameraKitSource(session, deviceId, isFirstCharactersBack((event.target).selectedOptions[0].text));
-    });
-  }
-  
-  async function attachLensesToSelect(lenses, session) {
-    const lensSelect = document.getElementById('lenses');
-  
-    lenses.forEach((lens) => {
-      const option = document.createElement('option');
-  
-      option.value = lens.id;
-      option.text = lens.name;
-  
-      lensSelect.appendChild(option);
-    });
-  
-    lensSelect.addEventListener('change', (event) => {
-      const lensId = (event.target).selectedOptions[0].value;
-      const lens = lenses.find((lens) => lens.id === lensId);
-  
-      if (lens) session.applyLens(lens);
-    });
-  }
-  
-  init();
-
-// 'use strict';
-
-
-// window.addEventListener("load", async () => {
-
-//     var videoRequest = async () => {
-
-//         const cameraKit = await bootstrapCameraKit({ apiToken: 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNjg0ODMxMTQ0LCJzdWIiOiJlYTg4ZjQyZC0xYmM5LTRkN2YtYTMwMS02Y2M4YzU2OTg2Y2J-U1RBR0lOR340OGY1YjJmYS1iZGNjLTQ5MzAtYjI2NS1jNGYzODliMzAwYjAifQ.BojCwDCBLoh_7wsjjiM59vkpvdCDUyDd0WVMcFjcei0' });
-//         const session = await cameraKit.createSession();
-//         document.getElementById('output-canvas').replaceWith(session.output.live);
-//         const mediaStream = session.output.capture.captureStream();
-        
-//         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-//             console.log(await navigator.mediaDevices.enumerateDevices());
-//             navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', _deviceId: { exact: '481ae3cf657b958fda98e99c4f1d200be8993138bc6b7603f1e068f226fe1500' }  } })
-//                 .then(async function(stream) {
-//                     var video = document.getElementById('video');
-//                     video.srcObject = stream;
-//                     session.setSource(stream);
-
-                    
-//                     var canvas = document.getElementById('output-canvas');
-
-//                     const { lenses } = await cameraKit.lensRepository.loadLensGroups(['1ef0167d-093e-4165-8fdd-d1f8326ba52a']);
-//                     console.log(lenses);
-//                     await session.applyLens(lenses[19])
-
-//                     var videoAspectRatio = video.videoWidth / video.videoHeight;
-//                     var canvasHeight = window.innerHeight;
-//                     var canvasWidth = canvasHeight * videoAspectRatio;
-
-//                     session.source.setRenderSize(canvasHeight, window.innerWidth);
-//                     session.source.setTransform(Transform2D.MirrorX);
-//                     session.play();
-
-//                     function drawVideoToCanvas() {
-//                         var videoAspectRatio = video.videoWidth / video.videoHeight;
-//                         var canvasHeight = window.innerHeight;
-//                         var canvasWidth = canvasHeight * videoAspectRatio;
-                
-//                         session.source.setRenderSize(canvasWidth, canvasHeight);
-//                         requestAnimationFrame(drawVideoToCanvas);
-//                       }
-                
-
-//                     drawVideoToCanvas();
-//                 })
-//                 .catch(function(error) {
-//                     console.error('Error accessing the camera: ', error);
-//                 });
-//         } else {
-//             console.error('getUserMedia is not supported by this browser.');
-//         }
-//     }
-//     await videoRequest()
-// });
+  // Start the CameraKit session.
+  session.play();
+})();
