@@ -27,11 +27,14 @@ import {
   session.applyLens(lenses[19]);
 
   // Get the user's media stream.
+  // for back camera use { facingMode: "environment" } instead of { facingMode: "user" }
   let mediaStream = await navigator.mediaDevices.getUserMedia({
-    video: true,
+    video: { facingMode: "user" },
   });
 
   // Create a CameraKit media stream source from the user's media stream.
+  // for back camera use { cameraType: 'back' } instead of { cameraType: 'front' }
+  // and remove transofrm property
   const source = createMediaStreamSource(
     mediaStream, {
       transform: Transform2D.MirrorX,
