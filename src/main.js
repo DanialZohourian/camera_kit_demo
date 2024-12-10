@@ -11,7 +11,7 @@ import {
 (async function() {
   // Bootstrap Camera Kit using your API token.
   const cameraKit = await bootstrapCameraKit({
-    apiToken: '<API_TOKEN>'
+    apiToken: 'eyJhbGciOiJIUzI1NiIsImtpZCI6IkNhbnZhc1MyU0hNQUNQcm9kIiwidHlwIjoiSldUIn0.eyJhdWQiOiJjYW52YXMtY2FudmFzYXBpIiwiaXNzIjoiY2FudmFzLXMyc3Rva2VuIiwibmJmIjoxNzMzODI5NjY5LCJzdWIiOiJlYjAyYzM1YS1hYTA3LTRhZGUtYWJhYS0wODgxNTQ4ZTFkOTB-U1RBR0lOR345MTk5NTBiMS0zZDAwLTRiMGQtOTBhMy1mMzgzZTEzZGIzY2EifQ.K1evIDJZ7R2z9Wv4qWjk6OwPoxcWUJkOYyV2PjXRX_0'
   });
 
   // Create a new CameraKit session.
@@ -21,10 +21,10 @@ import {
   document.getElementById('canvas').replaceWith(session.output.live);
 
   // Load the specified lens group.
-  const { lenses } = await cameraKit.lensRepository.loadLensGroups(['<TEMPLATE_ID>'])
+  const { lenses } = await cameraKit.lensRepository.loadLensGroups(['b0feee61-9140-4924-b7b8-f1feee6a788e'])
 
   // Apply the first lens in the lens group to the CameraKit session.
-  session.applyLens(lenses[19]);
+  session.applyLens(lenses[0]);
 
   // Get the user's media stream.
   // for back camera use { facingMode: "environment" } instead of { facingMode: "user" }
